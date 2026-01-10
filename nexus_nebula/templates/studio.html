@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Studio IDE - Nexus Nebula Universe{% endblock %}
+
+{% block head %}
+<style>
+    .studio-layout {
+        height: calc(100vh - 64px); /* Account for navbar */
+    }
+    .file-tree {
+        width: 250px;
+        background: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+    }
+    .editor-panel {
+        flex: 1;
+        background: #ffffff;
+    }
+    .preview-panel {
+        width: 400px;
+        background: #ffffff;
+        border-left: 1px solid #e9ecef;
+    }
+    .terminal-panel {
+        height: 200px;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        overflow-y: auto;
+    }
+    .file-item {
+        padding: 4px 8px;
+        cursor: pointer;
+        border-radius: 4px;
+        margin: 1px 0;
+    }
+    .file-item:hover {
+        background: #e9ecef;
+    }
+    .file-item.active {
+        background: #007bff;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="studio-layout flex flex-col">
+    <!-- Toolbar -->
+    <div class="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <h1 class="text-lg font-semibold text-gray-900">Studio IDE</h1>
+            <span class="text-sm text-gray-500">{{ project.name if project else 'New Project' }}</span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button onclick="runCode()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium">
+                ▶ Run
+            </button>
+            <button onclick="saveProject()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">
+                💾 Save
+            </button>
+            <button onclick="shareProject()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-medium">
+                🔗 Share
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Studio Area -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- File Tree -->
+        <div class="file-tree p-4 overflow-y-auto">
+            <div class="mb-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Files</h3>
+                <button onclick="createFile()" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs">
+                    + New File
+                </button>
+            </div>
+
+            <div id="fileTree" class="space-y-1">
+                <!-- Files will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Editor Panel -->
+        <div class="editor-panel flex flex-col">
+            <!-- Tab Bar -->
+            <div id="tabBar" class="bg-gray-100 border-b border-gray-200 px-2 py-1 flex space-x-1 overflow-x-auto">
+                <!-- Tabs will be created here -->
+            </div>
+
+            <!-- Code Editor -->
+            <div class="flex-1 relative">
+                <textarea id="codeEditor" class="w-full h-full p-4 font-mono text-sm resize-none border-0 outline-none"
+                          placeholder="Start coding..."></textarea>
+            </div>
+
+            <!-- Terminal Panel -->
+            <div class="terminal-panel p-2">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-gray-400">Terminal</span>
+                    <button onclick="clearTerminal()" class="text-xs text-gray-400 hover:text-white">Clear</button>
+                </div>
+                <div id="terminalOutput" class="flex-1">
+                    <div class="text-green-400">$ Welcome to Nexus Nebula Terminal</div>
+                    <div class="text-green-400">$ Ready for commands...</div>
+                </div>
+                <div class="flex mt-2">
+                    <span class="text-green-400 mr-2">$</span>
+                    <input id="terminalInput" type="text" class="flex-1 bg-transparent outline-none text-gray-300"
+                           placeholder="Enter command..." onkeypress="handleTerminalKey(event)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel flex flex-col">
+            <div class="bg-gray-100 border-b border-gray-200 px-4 py-2">
+                <h3 class="text-sm font-semibold text-gray-700">Live Preview</h3>
+            </div>
+
+            <div class="flex-1">
+                <iframe id="previewFrame" class="w-full h-full border-0" sandbox="allow-scripts allow-same-origin">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div id="createFileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg w-96">
+        <h3 class="text-lg font-semibold mb-4">Create New File</h3>
+        <input id="newFileName" type="text" placeholder="filename.js" class="w-full px-3 py-2 border border-gray-300 rounded mb-4">
+        <div class="flex justify-end space-x-2">
+            <button onclick="closeModal('createFileModal')" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+            <button onclick="confirmCreateFile()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Create</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentProject = {{ project|tojson if project else 'null' }};
+    let openFiles = {};
+    let activeFile = null;
+
+    // Initialize studio
+    document.addEventListener('DOMContentLoaded', function() {
+        loadProjectFiles();
+        setupEditor();
+    });
+
+    function setupEditor() {
+        const editor = document.getElementById('codeEditor');
+
+        editor.addEventListener('input', function() {
+            if (activeFile) {
+                openFiles[activeFile].content = this.value;
+                openFiles[activeFile].modified = true;
+                updateTab(activeFile);
+            }
+        });
+
+        editor.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+    }
+
+    async function loadProjectFiles() {
+        if (!currentProject) return;
+
+        try {
+            const response = await fetch(`/api/projects/${currentProject.id}/files`);
+            const files = await response.json();
+
+            const fileTree = document.getElementById('fileTree');
+            fileTree.innerHTML = '';
+
+            files.forEach(file => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'file-item';
+                fileElement.textContent = file.path.split('/').pop();
+                fileElement.onclick = () => openFile(file);
+                fileTree.appendChild(fileElement);
+            });
+        } catch (error) {
+            console.error('Failed to load files:', error);
+        }
+    }
+
+    function openFile(file) {
+        activeFile = file.path;
+
+        if (!openFiles[activeFile]) {
+            openFiles[activeFile] = {
+                ...file,
+                modified: false
+            };
+        }
+
+        // Update UI
+        document.querySelectorAll('.file-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // Load content
+        document.getElementById('codeEditor').value = openFiles[activeFile].content || '';
+
+        // Update tabs
+        updateTabs();
+    }
+
+    function updateTabs() {
+        const tabBar = document.getElementById('tabBar');
+        tabBar.innerHTML = '';
+
+        Object.keys(openFiles).forEach(path => {
+            const tab = document.createElement('div');
+            tab.className = `px-3 py-1 rounded-t cursor-pointer text-sm ${
+                path === activeFile ? 'bg-white border-t border-l border-r border-gray-200' : 'bg-gray-200'
+            }`;
+            tab.textContent = path.split('/').pop();
+            if (openFiles[path].modified) {
+                tab.textContent += ' *';
+            }
+            tab.onclick = () => switchToTab(path);
+            tabBar.appendChild(tab);
+        });
+    }
+
+    function switchToTab(path) {
+        activeFile = path;
+        document.getElementById('codeEditor').value = openFiles[path].content || '';
+        updateTabs();
+    }
+
+    function updateTab(path) {
+        updateTabs();
+    }
+
+    async function runCode() {
+        const code = document.getElementById('codeEditor').value;
+        if (!code.trim()) return;
+
+        try {
+            const response = await fetch('/api/studio/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, language: detectLanguage(activeFile) })
+            });
+
+            const result = await response.json();
+            updatePreview(result.output);
+            addToTerminal(`$ Running ${activeFile || 'code'}...`);
+            addToTerminal(result.output);
+        } catch (error) {
+            addToTerminal(`Error: ${error.message}`);
+        }
+    }
+
+    function detectLanguage(filename) {
+        if (!filename) return 'javascript';
+        const ext = filename.split('.').pop().toLowerCase();
+        const langMap = {
+            'js': 'javascript',
+            'py': 'python',
+            'html': 'html',
+            'css': 'css',
+            'json': 'json'
+        };
+        return langMap[ext] || 'javascript';
+    }
+
+    function updatePreview(output) {
+        const frame = document.getElementById('previewFrame');
+        const doc = frame.contentDocument || frame.contentWindow.document;
+
+        if (output.includes('<html>')) {
+            doc.open();
+            doc.write(output);
+            doc.close();
+        } else {
+            doc.open();
+            doc.write(`<html><body><pre>${output}</pre></body></html>`);
+            doc.close();
+        }
+    }
+
+    function addToTerminal(text) {
+        const terminal = document.getElementById('terminalOutput');
+        const line = document.createElement('div');
+        line.textContent = text;
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function handleTerminalKey(event) {
+        if (event.key === 'Enter') {
+            const input = document.getElementById('terminalInput');
+            const command = input.value.trim();
+
+            if (command) {
+                addToTerminal(`$ ${command}`);
+                executeCommand(command);
+                input.value = '';
+            }
+        }
+    }
+
+    async function executeCommand(command) {
+        try {
+            const response = await fetch('/api/studio/terminal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command })
+            });
+
+            const result = await response.json();
+            addToTerminal(result.output);
+        } catch (error) {
+            addToTerminal(`Error: ${error.message}`);
+        }
+    }
+
+    async function saveProject() {
+        if (!currentProject) return;
+
+        try {
+            const files = Object.values(openFiles).map(f => ({
+                path: f.path,
+                content: f.content
+            }));
+
+            const response = await fetch(`/api/projects/${currentProject.id}/files`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ files })
+            });
+
+            if (response.ok) {
+                Object.values(openFiles).forEach(f => f.modified = false);
+                updateTabs();
+                addToTerminal('Project saved successfully');
+            }
+        } catch (error) {
+            addToTerminal(`Save failed: ${error.message}`);
+        }
+    }
+
+    function createFile() {
+        document.getElementById('createFileModal').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
+    async function confirmCreateFile() {
+        const filename = document.getElementById('newFileName').value.trim();
+        if (!filename) return;
+
+        const file = {
+            path: filename,
+            content: '',
+            is_binary: false
+        };
+
+        openFiles[filename] = { ...file, modified: true };
+        activeFile = filename;
+
+        document.getElementById('codeEditor').value = '';
+        updateTabs();
+        closeModal('createFileModal');
+        document.getElementById('newFileName').value = '';
+
+        addToTerminal(`Created new file: ${filename}`);
+    }
+
+    function clearTerminal() {
+        document.getElementById('terminalOutput').innerHTML = '';
+    }
+
+    async function shareProject() {
+        if (!currentProject) return;
+
+        try {
+            const response = await fetch(`/api/projects/${currentProject.id}/share`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+            if (result.share_url) {
+                navigator.clipboard.writeText(result.share_url);
+                addToTerminal(`Share link copied: ${result.share_url}`);
+            }
+        } catch (error) {
+            addToTerminal(`Share failed: ${error.message}`);
+        }
+    }
+</script>
+{% endblock %}

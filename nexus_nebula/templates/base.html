@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nexus Nebula Universe{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">N</span>
+                        </div>
+                        <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                            Nexus Nebula
+                        </span>
+                    </a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    {% if current_user %}
+                        <a href="/dashboard" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                        <a href="/studio" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Studio</a>
+                        <a href="/marketplace" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Marketplace</a>
+
+                        <div class="relative">
+                            <button onclick="toggleUserMenu()" class="flex items-center space-x-2 text-gray-700 hover:text-purple-600">
+                                <img src="{{ current_user.avatar_url or '/static/images/default-avatar.png' }}" class="w-8 h-8 rounded-full" alt="Avatar">
+                                <span class="text-sm font-medium">{{ current_user.name }}</span>
+                            </button>
+
+                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                                <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="/auth/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="/auth/login" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="/auth/register" class="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <p class="text-sm text-gray-500">© 2025 Nexus Nebula Universe. All rights reserved.</p>
+                <div class="flex space-x-4">
+                    <a href="/docs" class="text-sm text-gray-500 hover:text-purple-600">Documentation</a>
+                    <a href="/support" class="text-sm text-gray-500 hover:text-purple-600">Support</a>
+                    <a href="/privacy" class="text-sm text-gray-500 hover:text-purple-600">Privacy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+
+    <script>
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('userMenu');
+            const button = event.target.closest('button');
+            if (!button || !button.onclick || !button.onclick.toString().includes('toggleUserMenu')) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

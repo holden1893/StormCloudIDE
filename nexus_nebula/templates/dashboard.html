@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Nexus Nebula Universe{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome back, {{ current_user.name }}!</h1>
+        <p class="text-gray-600">Manage your projects and continue building amazing applications.</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="/studio" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-purple-600 text-xl">⚡</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-900">Open Studio</h3>
+                    <p class="text-sm text-gray-600">Start coding with AI assistance</p>
+                </div>
+            </a>
+
+            <a href="/projects" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-blue-600 text-xl">📁</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-900">My Projects</h3>
+                    <p class="text-sm text-gray-600">View and manage your projects</p>
+                </div>
+            </a>
+
+            <a href="/marketplace" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-green-600 text-xl">🛒</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-900">Marketplace</h3>
+                    <p class="text-sm text-gray-600">Discover and share components</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Projects -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">Recent Projects</h2>
+            <a href="/projects" class="text-purple-600 hover:text-purple-800 text-sm font-medium">View all →</a>
+        </div>
+
+        {% if projects %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for project in projects[:6] %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-semibold text-gray-900 truncate">{{ project.name }}</h3>
+                            {% if project.is_public %}
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Public</span>
+                            {% else %}
+                                <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">Private</span>
+                            {% endif %}
+                        </div>
+
+                        {% if project.description %}
+                            <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ project.description }}</p>
+                        {% endif %}
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">
+                                {{ project.created_at.strftime('%b %d, %Y') }}
+                            </span>
+                            <div class="flex space-x-2">
+                                <a href="/studio?project_id={{ project.id }}" class="text-purple-600 hover:text-purple-800 text-sm">
+                                    Edit
+                                </a>
+                                <button onclick="shareProject('{{ project.id }}')" class="text-blue-600 hover:text-blue-800 text-sm">
+                                    Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl text-gray-400">📁</span>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
+                <p class="text-gray-600 mb-4">Start building your first project with AI assistance.</p>
+                <a href="/studio" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                    Create Project
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-purple-600 text-xl">📊</span>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Total Projects</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ projects|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-blue-600 text-xl">🔗</span>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Shared Projects</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ projects|selectattr('is_public')|list|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-green-600 text-xl">💾</span>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Storage Used</p>
+                    <p class="text-2xl font-bold text-gray-900">0 MB</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-yellow-600 text-xl">⭐</span>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Subscription</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ current_user.subscription_tier.title() }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
+        <div class="space-y-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span class="text-purple-600 text-sm">⚡</span>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-900">Welcome to Nexus Nebula Universe!</p>
+                    <p class="text-xs text-gray-500">Just now</p>
+                </div>
+            </div>
+        </div>
+
+        {% if not projects %}
+            <div class="text-center py-8 text-gray-500">
+                <p>No recent activity. Start by creating your first project!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    async function shareProject(projectId) {
+        try {
+            const response = await NexusNebula.api.post(`/projects/${projectId}/share`);
+            if (response.share_url) {
+                await NexusNebula.copyToClipboard(window.location.origin + response.share_url);
+            }
+        } catch (error) {
+            NexusNebula.showNotification('Failed to create share link', 'error');
+        }
+    }
+</script>
+{% endblock %}

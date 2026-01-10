@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Marketplace - Nexus Nebula Universe{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Component Marketplace</h1>
+        <p class="text-gray-600">Discover, share, and monetize reusable components and templates.</p>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <input type="text" id="searchInput" placeholder="Search components..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            </div>
+            <div class="flex gap-2">
+                <select id="categoryFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <option value="">All Categories</option>
+                    <option value="ui">UI Components</option>
+                    <option value="api">API Templates</option>
+                    <option value="fullstack">Full Stack</option>
+                    <option value="mobile">Mobile</option>
+                    <option value="ai">AI/ML</option>
+                </select>
+                <select id="sortBy" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <option value="newest">Newest</option>
+                    <option value="popular">Most Popular</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marketplace Grid -->
+    <div id="marketplaceGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {% for listing in listings %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <!-- Preview Image -->
+                <div class="h-48 bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+                    <div class="text-4xl text-purple-300">
+                        {% if listing.tags and 'ui' in listing.tags %}🎨{% elif listing.tags and 'api' in listing.tags %}🔌{% else %}📦{% endif %}
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ listing.title }}</h3>
+                        {% if listing.price > 0 %}
+                            <span class="text-lg font-bold text-green-600">${{ "%.2f"|format(listing.price / 100) }}</span>
+                        {% else %}
+                            <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Free</span>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">{{ listing.description }}</p>
+
+                    <!-- Tags -->
+                    {% if listing.tags %}
+                        <div class="flex flex-wrap gap-1 mb-4">
+                            {% for tag in listing.tags %}
+                                <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Stats -->
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span>{{ listing.download_count }} downloads</span>
+                        <span>{{ listing.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-2">
+                        <button onclick="previewListing('{{ listing.id }}')"
+                                class="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                            Preview
+                        </button>
+                        <button onclick="downloadListing('{{ listing.id }}')"
+                                class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                            {% if listing.price > 0 %}Purchase{% else %}Download{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Empty State -->
+    {% if not listings %}
+        <div class="text-center py-12">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-2xl text-gray-400">🛒</span>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No components found</h3>
+            <p class="text-gray-600 mb-4">Be the first to share a component in the marketplace!</p>
+            {% if current_user %}
+                <a href="/studio" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                    Create Component
+                </a>
+            {% else %}
+                <a href="/auth/login" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                    Sign In to Contribute
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-4">Upload Component</h3>
+            <form id="uploadForm" onsubmit="handleUpload(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input type="text" name="title" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price (USD)</label>
+                        <input type="number" name="price" min="0" step="0.01" placeholder="0.00" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
+                        <input type="text" name="tags" placeholder="ui, react, component" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Component File</label>
+                        <input type="file" name="file" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="closeUploadModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentListings = {{ listings|tojson }};
+
+    // Search and filter functionality
+    document.getElementById('searchInput').addEventListener('input', filterListings);
+    document.getElementById('categoryFilter').addEventListener('change', filterListings);
+    document.getElementById('sortBy').addEventListener('change', sortListings);
+
+    function filterListings() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const category = document.getElementById('categoryFilter').value;
+
+        const filtered = currentListings.filter(listing => {
+            const matchesSearch = listing.title.toLowerCase().includes(searchTerm) ||
+                                listing.description.toLowerCase().includes(searchTerm);
+            const matchesCategory = !category || (listing.tags && listing.tags.includes(category));
+            return matchesSearch && matchesCategory;
+        });
+
+        renderListings(filtered);
+    }
+
+    function sortListings() {
+        const sortBy = document.getElementById('sortBy').value;
+        let sorted = [...currentListings];
+
+        switch (sortBy) {
+            case 'popular':
+                sorted.sort((a, b) => b.download_count - a.download_count);
+                break;
+            case 'price-low':
+                sorted.sort((a, b) => a.price - b.price);
+                break;
+            case 'price-high':
+                sorted.sort((a, b) => b.price - a.price);
+                break;
+            case 'newest':
+            default:
+                sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                break;
+        }
+
+        renderListings(sorted);
+    }
+
+    function renderListings(listings) {
+        const grid = document.getElementById('marketplaceGrid');
+        // Re-render listings (simplified - in production use a proper template)
+        location.reload(); // Simple refresh for demo
+    }
+
+    async function previewListing(listingId) {
+        // Open preview modal or page
+        window.open(`/marketplace/preview/${listingId}`, '_blank');
+    }
+
+    async function downloadListing(listingId) {
+        try {
+            const response = await NexusNebula.api.post(`/marketplace/${listingId}/download`);
+            if (response.download_url) {
+                window.open(response.download_url, '_blank');
+            }
+        } catch (error) {
+            NexusNebula.showNotification('Download failed: ' + error.message, 'error');
+        }
+    }
+
+    function openUploadModal() {
+        document.getElementById('uploadModal').classList.remove('hidden');
+    }
+
+    function closeUploadModal() {
+        document.getElementById('uploadModal').classList.add('hidden');
+    }
+
+    async function handleUpload(event) {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+
+        try {
+            const response = await fetch('/api/marketplace/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                NexusNebula.showNotification('Component uploaded successfully!', 'success');
+                closeUploadModal();
+                location.reload();
+            } else {
+                throw new Error('Upload failed');
+            }
+        } catch (error) {
+            NexusNebula.showNotification('Upload failed: ' + error.message, 'error');
+        }
+    }
+
+    // Add upload button to header if user is logged in
+    {% if current_user %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const header = document.querySelector('h1');
+        const uploadBtn = document.createElement('button');
+        uploadBtn.textContent = '+ Upload Component';
+        uploadBtn.className = 'ml-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700';
+        uploadBtn.onclick = openUploadModal;
+        header.parentNode.insertBefore(uploadBtn, header.nextSibling);
+    });
+    {% endif %}
+</script>
+{% endblock %}

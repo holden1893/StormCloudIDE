@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Nexus Nebula Universe{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <div class="mx-auto w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+                <span class="text-white font-bold text-2xl">N</span>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Sign in to your account
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Don't have an account?
+                <a href="/auth/register" class="font-medium text-purple-600 hover:text-purple-500">
+                    Create one
+                </a>
+            </p>
+        </div>
+
+        <form id="loginForm" class="mt-8 space-y-6" onsubmit="handleLogin(event)">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="email" class="sr-only">Email address</label>
+                    <input id="email" name="email" type="email" autocomplete="email" required
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
+                           placeholder="Email address">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
+                           placeholder="Password">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember" name="remember" type="checkbox"
+                           class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                    <label for="remember" class="ml-2 block text-sm text-gray-900">
+                        Remember me
+                    </label>
+                </div>
+
+                <div class="text-sm">
+                    <a href="/auth/forgot" class="font-medium text-purple-600 hover:text-purple-500">
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" id="loginButton"
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <svg id="loginSpinner" class="hidden h-5 w-5 text-purple-500 group-hover:text-purple-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    Sign in
+                </button>
+            </div>
+        </form>
+
+        <!-- Demo Accounts -->
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-gray-50 text-gray-500">Demo Accounts</span>
+                </div>
+            </div>
+
+            <div class="mt-4 space-y-2">
+                <button onclick="fillDemoAccount('teslaward369@gmail.com', 'password123')"
+                        class="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded border">
+                    <strong>Free Account:</strong> teslaward369@gmail.com
+                </button>
+                <button onclick="fillDemoAccount('holden1893@gmail.com', 'StormGod420!')"
+                        class="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded border">
+                    <strong>Pro Account:</strong> holden1893@gmail.com
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function handleLogin(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        const button = document.getElementById('loginButton');
+        const spinner = document.getElementById('loginSpinner');
+
+        // Show loading state
+        button.disabled = true;
+        spinner.classList.remove('hidden');
+        button.textContent = 'Signing in...';
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Store token
+                localStorage.setItem('auth_token', data.access_token);
+
+                // Redirect to dashboard
+                window.location.href = '/dashboard';
+            } else {
+                throw new Error(data.detail || 'Login failed');
+            }
+        } catch (error) {
+            alert('Login failed: ' + error.message);
+        } finally {
+            // Reset loading state
+            button.disabled = false;
+            spinner.classList.add('hidden');
+            button.textContent = 'Sign in';
+        }
+    }
+
+    function fillDemoAccount(email, password) {
+        document.getElementById('email').value = email;
+        document.getElementById('password').value = password;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Nexus Nebula Universe - AI-Powered Development Platform{% endblock %}
+
+{% block head %}
+<style>
+    .hero-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .demo-terminal {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-gradient text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                Nexus Nebula
+                <span class="block text-3xl md:text-4xl font-light">Universe</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-200 max-w-3xl mx-auto">
+                AI-powered development platform with quantum-linked intelligence.
+                Build, deploy, and share projects with the power of advanced AI agents.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                {% if not current_user %}
+                    <a href="/auth/register" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
+                        Start Building Free
+                    </a>
+                    <a href="/studio" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-white hover:text-purple-600 transition-colors">
+                        Try Studio
+                    </a>
+                {% else %}
+                    <a href="/studio" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
+                        Open Studio
+                    </a>
+                    <a href="/dashboard" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-white hover:text-purple-600 transition-colors">
+                        My Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Everything you need to build amazing applications with AI assistance
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Studio IDE -->
+            <div class="feature-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                    <span class="text-2xl">⚡</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">AI-Powered Studio</h3>
+                <p class="text-gray-600">
+                    Advanced IDE with live preview, terminal integration, and AI code generation.
+                    Build faster with intelligent suggestions and automated refactoring.
+                </p>
+            </div>
+
+            <!-- Quantum AI -->
+            <div class="feature-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <span class="text-2xl">🌌</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Quantum-Linked AI</h3>
+                <p class="text-gray-600">
+                    Swarm intelligence with multiple AI providers. Groq for speed, Claude for reasoning,
+                    Gemini for multimodal tasks. Automatically routed for optimal results.
+                </p>
+            </div>
+
+            <!-- Marketplace -->
+            <div class="feature-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                    <span class="text-2xl">🛒</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Component Marketplace</h3>
+                <p class="text-gray-600">
+                    Share and discover reusable components, templates, and complete projects.
+                    Monetize your creations or use community resources to accelerate development.
+                </p>
+            </div>
+
+            <!-- Live Collaboration -->
+            <div class="feature-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                    <span class="text-2xl">🤝</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Real-time Collaboration</h3>
+                <p class="text-gray-600">
+                    Work together in real-time with live cursors, comments, and version control.
+                    Perfect for teams building complex applications.
+                </p>
+            </div>
+
+            <!-- Cloud Deployment -->
+            <div class="feature-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                    <span class="text-2xl">☁️</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">One-Click Deployment</h3>
+                <p class="text-gray-600">
+                    Deploy to multiple cloud providers with a single click. Built-in CI/CD,
+                    monitoring, and scaling for production-ready applications.
+                </p>
+            </div>
+
+            <!-- Security First -->
+            <div class="feature-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                    <span class="text-2xl">🔒</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Enterprise Security</h3>
+                <p class="text-gray-600">
+                    Bank-level security with end-to-end encryption, SOC2 compliance,
+                    and advanced access controls. Your code and data are always protected.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">See It In Action</h2>
+            <p class="text-xl text-gray-600">
+                Experience the power of AI-assisted development
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Demo Terminal -->
+            <div class="demo-terminal p-6 rounded-lg">
+                <div class="mb-4 text-green-400">$ nexus generate "React dashboard with charts"</div>
+                <div class="mb-2">🤖 Researching requirements...</div>
+                <div class="mb-2">📋 Planning components...</div>
+                <div class="mb-2">⚡ Generating code with Groq...</div>
+                <div class="mb-2">🎨 Designing UI with Claude...</div>
+                <div class="mb-2">✅ Reviewing quality...</div>
+                <div class="mb-2 text-green-400">🚀 Project ready! Opening in Studio...</div>
+                <div class="mt-4 text-blue-400">$ Ready for development</div>
+            </div>
+
+            <!-- Demo Stats -->
+            <div class="space-y-6">
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span class="text-gray-700">Projects Generated</span>
+                    <span class="text-2xl font-bold text-purple-600">10,000+</span>
+                </div>
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span class="text-gray-700">Lines of Code</span>
+                    <span class="text-2xl font-bold text-blue-600">2.5M+</span>
+                </div>
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span class="text-2xl font-bold text-green-600">99.9%</span>
+                    <span class="text-gray-700 text-right">Uptime</span>
+                </div>
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span class="text-gray-700">Active Developers</span>
+                    <span class="text-2xl font-bold text-yellow-600">50K+</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+    <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+        <h2 class="text-4xl font-bold mb-4">Ready to Build the Future?</h2>
+        <p class="text-xl mb-8 text-purple-100">
+            Join thousands of developers using Nexus Nebula Universe to create amazing applications with AI assistance.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            {% if not current_user %}
+                <a href="/auth/register" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
+                    Start Free Trial
+                </a>
+                <a href="/docs" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-white hover:text-purple-600 transition-colors">
+                    View Documentation
+                </a>
+            {% else %}
+                <a href="/studio" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
+                    Launch Studio
+                </a>
+                <a href="/marketplace" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-white hover:text-purple-600 transition-colors">
+                    Browse Marketplace
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
